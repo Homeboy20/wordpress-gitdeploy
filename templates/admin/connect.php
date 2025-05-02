@@ -104,7 +104,7 @@ if (isset($_POST['github_deployer_connect_url_nonce']) && wp_verify_nonce($_POST
     <h2><?php esc_html_e('Connect to GitHub Repository', 'github-deployer'); ?></h2>
     
     <?php if ($repo_connected): ?>
-        <div class="notice notice-success is-dismissible">
+        <div class="github-deployer-notice github-deployer-notice-success is-dismissible">
             <p><?php echo esc_html($connection_message); ?></p>
             <p>
                 <a href="<?php echo esc_url(add_query_arg(array(
@@ -113,71 +113,87 @@ if (isset($_POST['github_deployer_connect_url_nonce']) && wp_verify_nonce($_POST
                     'repo' => $result['repo'],
                     'ref' => $result['branch'],
                     'type' => $result['type']
-                ), admin_url('admin.php'))); ?>" class="button button-primary">
+                ), admin_url('admin.php'))); ?>" class="github-deployer-button github-deployer-button-primary">
                     <?php esc_html_e('Deploy Now', 'github-deployer'); ?>
                 </a>
-                <a href="<?php echo esc_url(add_query_arg(array('page' => 'github-deployer', 'tab' => 'repositories'), admin_url('admin.php'))); ?>" class="button">
+                <a href="<?php echo esc_url(add_query_arg(array('page' => 'github-deployer', 'tab' => 'repositories'), admin_url('admin.php'))); ?>" class="github-deployer-button github-deployer-button-secondary">
                     <?php esc_html_e('View All Repositories', 'github-deployer'); ?>
                 </a>
             </p>
         </div>
     <?php elseif ($connection_error): ?>
-        <div class="notice notice-error is-dismissible">
+        <div class="github-deployer-notice github-deployer-notice-error is-dismissible">
             <p><?php echo esc_html($connection_message); ?></p>
         </div>
     <?php endif; ?>
     
-    <div class="github-deployer-connect-form">
-        <p><?php esc_html_e('Enter the URL of a GitHub repository to connect it to GitHub Deployer.', 'github-deployer'); ?></p>
+    <div class="github-deployer-card">
+        <div class="github-deployer-card-header">
+            <h2><?php esc_html_e('Connect Repository', 'github-deployer'); ?></h2>
+        </div>
         
-        <form method="post" action="">
-            <?php wp_nonce_field('github_deployer_connect_url', 'github_deployer_connect_url_nonce'); ?>
+        <div class="github-deployer-card-body">
+            <p><?php esc_html_e('Enter the URL of a GitHub repository to connect it to GitHub Deployer.', 'github-deployer'); ?></p>
             
-            <table class="form-table">
-                <tr>
-                    <th scope="row">
-                        <label for="repo-url"><?php esc_html_e('GitHub Repository URL', 'github-deployer'); ?></label>
-                    </th>
-                    <td>
-                        <input type="url" id="repo-url" name="repo_url" class="regular-text" placeholder="https://github.com/username/repository" value="<?php echo isset($_POST['repo_url']) ? esc_attr(sanitize_text_field($_POST['repo_url'])) : 'https://github.com/Homeboy20/wordpress-gitdeploy'; ?>" required>
-                        <p class="description"><?php esc_html_e('Enter the full URL to the GitHub repository (e.g., https://github.com/username/repository).', 'github-deployer'); ?></p>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><?php esc_html_e('Options', 'github-deployer'); ?></th>
-                    <td>
-                        <fieldset>
-                            <label for="deploy-immediately">
-                                <input type="checkbox" id="deploy-immediately" name="deploy_immediately" value="1" checked>
-                                <?php esc_html_e('Deploy immediately after connecting', 'github-deployer'); ?>
-                            </label>
-                            <p class="description"><?php esc_html_e('This will install the repository as a WordPress plugin or theme right after connecting.', 'github-deployer'); ?></p>
-                            
-                            <label for="enable-auto-update" style="margin-top: 10px; display: block;">
-                                <input type="checkbox" id="enable-auto-update" name="enable_auto_update" value="1" checked>
-                                <?php esc_html_e('Enable auto-updates', 'github-deployer'); ?>
-                            </label>
-                            <p class="description"><?php esc_html_e('Automatically check for and apply updates to this repository.', 'github-deployer'); ?></p>
-                        </fieldset>
-                    </td>
-                </tr>
-            </table>
-            
-            <?php submit_button(__('Connect Repository', 'github-deployer')); ?>
-        </form>
+            <form method="post" action="" class="github-deployer-form">
+                <?php wp_nonce_field('github_deployer_connect_url', 'github_deployer_connect_url_nonce'); ?>
+                
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="repo-url"><?php esc_html_e('GitHub Repository URL', 'github-deployer'); ?></label>
+                        </th>
+                        <td>
+                            <input type="url" id="repo-url" name="repo_url" class="regular-text" placeholder="https://github.com/username/repository" value="<?php echo isset($_POST['repo_url']) ? esc_attr(sanitize_text_field($_POST['repo_url'])) : 'https://github.com/Homeboy20/wordpress-gitdeploy'; ?>" required>
+                            <p class="description"><?php esc_html_e('Enter the full URL to the GitHub repository (e.g., https://github.com/username/repository).', 'github-deployer'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Options', 'github-deployer'); ?></th>
+                        <td>
+                            <fieldset>
+                                <label for="deploy-immediately" class="github-deployer-checkbox-label">
+                                    <input type="checkbox" id="deploy-immediately" name="deploy_immediately" value="1" checked>
+                                    <span><?php esc_html_e('Deploy immediately after connecting', 'github-deployer'); ?></span>
+                                </label>
+                                <p class="description"><?php esc_html_e('This will install the repository as a WordPress plugin or theme right after connecting.', 'github-deployer'); ?></p>
+                                
+                                <label for="enable-auto-update" class="github-deployer-checkbox-label" style="margin-top: 10px; display: block;">
+                                    <input type="checkbox" id="enable-auto-update" name="enable_auto_update" value="1" checked>
+                                    <span><?php esc_html_e('Enable auto-updates', 'github-deployer'); ?></span>
+                                </label>
+                                <p class="description"><?php esc_html_e('Automatically check for and apply updates to this repository.', 'github-deployer'); ?></p>
+                            </fieldset>
+                        </td>
+                    </tr>
+                </table>
+                
+                <div class="github-deployer-card-footer">
+                    <button type="submit" class="github-deployer-button github-deployer-button-primary"><?php esc_html_e('Connect Repository', 'github-deployer'); ?></button>
+                </div>
+            </form>
+        </div>
     </div>
     
-    <div class="github-deployer-connect-info">
-        <h3><?php esc_html_e('What happens when you connect a repository?', 'github-deployer'); ?></h3>
-        <ol>
-            <li><?php esc_html_e('GitHub Deployer checks if the repository exists and is accessible with your credentials.', 'github-deployer'); ?></li>
-            <li><?php esc_html_e('The repository is registered in your WordPress database for deployment.', 'github-deployer'); ?></li>
-            <li><?php esc_html_e('You can then deploy the repository as a plugin or theme, and optionally enable auto-updates.', 'github-deployer'); ?></li>
-        </ol>
+    <div class="github-deployer-card">
+        <div class="github-deployer-card-header">
+            <h2><?php esc_html_e('About Repository Connection', 'github-deployer'); ?></h2>
+        </div>
         
-        <p>
-            <strong><?php esc_html_e('Note:', 'github-deployer'); ?></strong>
-            <?php esc_html_e('For private repositories, make sure you have configured a valid GitHub token with repository access in the Settings tab.', 'github-deployer'); ?>
-        </p>
+        <div class="github-deployer-card-body">
+            <h3><?php esc_html_e('What happens when you connect a repository?', 'github-deployer'); ?></h3>
+            <ol>
+                <li><?php esc_html_e('GitHub Deployer checks if the repository exists and is accessible with your credentials.', 'github-deployer'); ?></li>
+                <li><?php esc_html_e('The repository is registered in your WordPress database for deployment.', 'github-deployer'); ?></li>
+                <li><?php esc_html_e('You can then deploy the repository as a plugin or theme, and optionally enable auto-updates.', 'github-deployer'); ?></li>
+            </ol>
+            
+            <div class="github-deployer-notice github-deployer-notice-warning">
+                <p>
+                    <strong><?php esc_html_e('Note:', 'github-deployer'); ?></strong>
+                    <?php esc_html_e('For private repositories, make sure you have configured a valid GitHub token with repository access in the Settings tab.', 'github-deployer'); ?>
+                </p>
+            </div>
+        </div>
     </div>
 </div> 
