@@ -31,7 +31,7 @@ class Installer {
     /**
      * Create the necessary database tables
      */
-    private function create_tables() {
+    public function create_tables() {
         global $wpdb;
         
         $charset_collate = $wpdb->get_charset_collate();

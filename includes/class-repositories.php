@@ -238,7 +238,7 @@ class Repositories {
     /**
      * Create the repositories table if it doesn't exist
      */
-    private function maybe_create_table() {
+    public function maybe_create_table() {
         global $wpdb;
         
         $table_name = $wpdb->prefix . 'github_deployer_repositories';

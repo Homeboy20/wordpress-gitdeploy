@@ -41,8 +41,8 @@ try {
 // Create table if it doesn't exist
 if (!$table_exists) {
     $installer = new GitHub_Deployer\Installer();
-    // Call the installer's activate method to create tables
-    $installer->activate();
+    // Call the installer's method to create tables
+    $installer->create_tables();
 }
 ?>
 

@@ -233,8 +233,8 @@ class Plugin {
      */
     public static function activate() {
         // Create database tables
-        $repositories = new Repositories();
-        $repositories->create_table();
+        $installer = new Installer();
+        $installer->create_tables();
         
         // Set up scheduler for updates
         if (!\wp_next_scheduled('github_deployer_check_updates')) {
