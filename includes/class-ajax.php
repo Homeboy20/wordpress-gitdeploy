@@ -247,10 +247,10 @@ class AJAX {
             wp_send_json_error(array('message' => __('You do not have sufficient permissions.', 'github-deployer')));
         }
         
-        // Get request parameters
-        $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'user';
-        $query = isset($_POST['query']) ? sanitize_text_field($_POST['query']) : '';
-        $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+        // Get request parameters - support both GET and POST
+        $type = isset($_REQUEST['type']) ? sanitize_text_field($_REQUEST['type']) : 'user';
+        $query = isset($_REQUEST['query']) ? sanitize_text_field($_REQUEST['query']) : '';
+        $page = isset($_REQUEST['page']) ? intval($_REQUEST['page']) : 1;
         
         // Get repository manager
         $repo_manager = new Repository_Manager();
