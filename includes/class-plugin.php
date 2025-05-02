@@ -109,7 +109,50 @@ class Plugin {
      * Load plugin textdomain
      */
     public function load_textdomain() {
-        \load_plugin_textdomain('github-deployer', false, dirname(\plugin_basename(GITHUB_DEPLOYER_FILE)) . '/languages');
+        \load_plugin_textdomain(
+            'github-deployer', 
+            false, 
+            'github-deployer/languages'
+        );
+    }
+    
+    /**
+     * Enqueue admin scripts and styles
+     * 
+     * @param string $hook The current admin page
+     */
+    public function enqueue_admin_scripts($hook) {
+        // Only enqueue on our plugin pages
+        if (strpos($hook, 'github-deployer') === false) {
+            return;
+        }
+        
+        // Enqueue styles
+        \wp_enqueue_style(
+            'github-deployer-admin',
+            \GITHUB_DEPLOYER_PLUGIN_URL . 'assets/css/admin.css',
+            array(),
+            \GITHUB_DEPLOYER_VERSION
+        );
+        
+        // Enqueue scripts
+        \wp_enqueue_script(
+            'github-deployer-admin',
+            \GITHUB_DEPLOYER_PLUGIN_URL . 'assets/js/admin.js',
+            array('jquery'),
+            \GITHUB_DEPLOYER_VERSION,
+            true
+        );
+        
+        // Localize script with nonce and AJAX URL
+        \wp_localize_script(
+            'github-deployer-admin',
+            'githubDeployer',
+            array(
+                'ajaxUrl' => \admin_url('admin-ajax.php'),
+                'nonce'   => \wp_create_nonce('github_deployer_nonce')
+            )
+        );
     }
     
     /**
