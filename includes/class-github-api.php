@@ -588,7 +588,7 @@ class GitHub_API {
      */
     private function request($endpoint, $include_redirect_headers = false) {
         $url = trailingslashit($this->api_url) . $endpoint;
-        $url = apply_filters('github_deployer_api_url', $url, $endpoint);
+        $url = \apply_filters('github_deployer_api_url', $url, $endpoint);
         
         $args = array(
             'timeout' => 30,
@@ -598,6 +598,32 @@ class GitHub_API {
                 'User-Agent' => 'WordPress/' . \get_bloginfo('version') . '; ' . \get_bloginfo('url'),
             )
         );
+        
+        // Check if token is empty
+        if (empty($this->token) && empty($this->oauth_token)) {
+            // For endpoints that might contain private repository data, return error
+            if (strpos($endpoint, 'repos/') === 0) {
+                // Extract owner and repo from endpoint
+                $parts = explode('/', trim($endpoint, '/'));
+                if (count($parts) >= 3) {
+                    $owner = $parts[1];
+                    $repo = $parts[2];
+                    return new \WP_Error(
+                        'github_api_auth_error',
+                        sprintf(
+                            \__('No GitHub authentication token provided. For private repositories like %s/%s, you need to configure a valid token with "repo" scope.', 'github-deployer'),
+                            $owner,
+                            $repo
+                        )
+                    );
+                }
+            }
+            
+            return new \WP_Error(
+                'github_api_auth_error',
+                \__('No GitHub authentication token provided. For private repositories, you need to configure a valid token with "repo" scope.', 'github-deployer')
+            );
+        }
         
         // Add authentication based on type
         if ($this->auth_type === 'oauth' && !empty($this->oauth_token)) {

@@ -89,81 +89,89 @@ class Auto_Updater {
     /**
      * Check if a specific repository has updates
      * 
-     * @param object $repository Repository object
+     * @param object|array $repository Repository object or array
      * @return bool True if updates were found and applied, false otherwise
      */
     public function check_repository_update($repository) {
         $github_api = $this->plugin->get_github_api();
         $deployer = $this->plugin->get_deployer();
         
+        // Handle both object and array formats
+        $is_object = is_object($repository);
+        
         // Make sure we have all required data
-        if (!isset($repository->owner) || !isset($repository->name) || !isset($repository->branch)) {
+        $owner = $is_object ? (isset($repository->owner) ? $repository->owner : null) : (isset($repository['owner']) ? $repository['owner'] : null);
+        $name = $is_object ? (isset($repository->name) ? $repository->name : (isset($repository->repo) ? $repository->repo : null)) : (isset($repository['name']) ? $repository['name'] : (isset($repository['repo']) ? $repository['repo'] : null));
+        $branch = $is_object ? (isset($repository->branch) ? $repository->branch : (isset($repository->ref) ? $repository->ref : null)) : (isset($repository['branch']) ? $repository['branch'] : (isset($repository['ref']) ? $repository['ref'] : null));
+        $id = $is_object ? (isset($repository->id) ? $repository->id : null) : (isset($repository['id']) ? $repository['id'] : null);
+        
+        if (!$owner || !$name || !$branch) {
             error_log('GitHub Deployer: Invalid repository data for update check');
             return false;
         }
         
         // Verify repository is still valid and accessible
-        $repo_info = $github_api->get_repo($repository->owner, $repository->name);
+        $repo_info = $github_api->get_repo($owner, $name);
         if (is_wp_error($repo_info)) {
             error_log(sprintf(
                 'GitHub Deployer: Repository %s/%s is not accessible: %s',
-                $repository->owner,
-                $repository->name,
+                $owner,
+                $name,
                 $repo_info->get_error_message()
             ));
             return false;
         }
         
         // Get the latest commit from the remote repository
-        $latest_commit = $github_api->get_latest_commit($repository->owner, $repository->name, $repository->branch);
+        $latest_commit = $github_api->get_latest_commit($owner, $name, $branch);
         
         if (is_wp_error($latest_commit)) {
             // Log the error
             error_log(sprintf(
                 'GitHub Deployer: Failed to check for updates for %s/%s: %s',
-                $repository->owner,
-                $repository->name,
+                $owner,
+                $name,
                 $latest_commit->get_error_message()
             ));
             return false;
         }
         
         // Get the latest deployed commit SHA from the database
-        $last_deployed_sha = get_option('github_deployer_last_commit_' . $repository->id, '');
+        $last_deployed_sha = get_option('github_deployer_last_commit_' . $id, '');
         
         // If the latest commit is different from the last deployed one, update
         if (!empty($latest_commit['sha']) && $latest_commit['sha'] !== $last_deployed_sha) {
             // Log update intent
             error_log(sprintf(
                 'GitHub Deployer: Found new commit for %s/%s, attempting to update from %s to %s',
-                $repository->owner,
-                $repository->name,
+                $owner,
+                $name,
                 substr($last_deployed_sha, 0, 8),
                 substr($latest_commit['sha'], 0, 8)
             ));
             
             // Deploy the updated repository
-            $result = $deployer->deploy($repository->id);
+            $result = $deployer->deploy($id);
             
             if (is_wp_error($result)) {
                 // Log the error
                 error_log(sprintf(
                     'GitHub Deployer: Failed to auto-update %s/%s: %s',
-                    $repository->owner,
-                    $repository->name,
+                    $owner,
+                    $name,
                     $result->get_error_message()
                 ));
                 return false;
             }
             
             // Update the last deployed commit SHA
-            update_option('github_deployer_last_commit_' . $repository->id, $latest_commit['sha']);
+            update_option('github_deployer_last_commit_' . $id, $latest_commit['sha']);
             
             // Log the successful update
             error_log(sprintf(
                 'GitHub Deployer: Successfully auto-updated %s/%s to commit %s',
-                $repository->owner,
-                $repository->name,
+                $owner,
+                $name,
                 $latest_commit['sha']
             ));
             
