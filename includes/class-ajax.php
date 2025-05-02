@@ -9,6 +9,7 @@ class AJAX {
         add_action('wp_ajax_github_deployer_check_tracked', array($this, 'check_tracked'));
         add_action('wp_ajax_github_deployer_fetch_repositories', array($this, 'fetch_repositories'));
         add_action('wp_ajax_github_deployer_check_connection', array($this, 'check_connection'));
+        add_action('wp_ajax_github_deployer_get_repos', array($this, 'get_repos'));
     }
     
     /**
@@ -230,5 +231,67 @@ class AJAX {
             'owner' => $owner,
             'repo' => $repo
         ));
+    }
+
+    /**
+     * Get repositories from GitHub - Alternative endpoint used by the newer UI
+     */
+    public function get_repos() {
+        // Check nonce
+        if (!check_ajax_referer('github_deployer_nonce', 'nonce', false)) {
+            wp_send_json_error(array('message' => __('Security check failed.', 'github-deployer')));
+        }
+        
+        // Check permissions
+        if (!current_user_can('install_plugins') && !current_user_can('install_themes')) {
+            wp_send_json_error(array('message' => __('You do not have sufficient permissions.', 'github-deployer')));
+        }
+        
+        // Get request parameters
+        $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'user';
+        $query = isset($_POST['query']) ? sanitize_text_field($_POST['query']) : '';
+        $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+        
+        // Get repository manager
+        $repo_manager = new Repository_Manager();
+        
+        // Fetch repositories
+        $result = $repo_manager->get_github_repositories($type, $query, $page);
+        
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => format_error_message($result)));
+            return;
+        }
+        
+        // Prepare repositories data with deploy URLs
+        $repositories = array();
+        
+        if ($type === 'search' && isset($result->items)) {
+            $items = $result->items;
+            $total_count = $result->total_count;
+        } else {
+            $items = $result;
+            $total_count = count($result);
+        }
+        
+        foreach ($items as $repo) {
+            // Add deploy URL
+            $repo->deploy_url = admin_url('admin.php?page=github-deployer&tab=deploy') . 
+                               '&owner=' . urlencode($repo->owner->login) . 
+                               '&repo=' . urlencode($repo->name) . 
+                               '&branch=' . urlencode($repo->default_branch);
+            
+            $repositories[] = $repo;
+        }
+        
+        // Format response data
+        $data = array(
+            'repositories' => $repositories,
+            'total_count' => $total_count,
+            'page' => $page,
+            'total_pages' => ceil($total_count / 30) // 30 is default per_page in GitHub API
+        );
+        
+        wp_send_json_success($data);
     }
 } 
