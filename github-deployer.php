@@ -19,6 +19,7 @@ if (!defined('ABSPATH')) {
 define('GITHUB_DEPLOYER_VERSION', '2.1.0');
 define('GITHUB_DEPLOYER_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('GITHUB_DEPLOYER_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('GITHUB_DEPLOYER_FILE', __FILE__);
 
 // Include class files
 require_once GITHUB_DEPLOYER_PLUGIN_DIR . 'includes/class-settings.php';

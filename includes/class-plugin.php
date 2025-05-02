@@ -102,7 +102,7 @@ class Plugin {
         \add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
         
         // Initialize components
-        add_action('plugins_loaded', array($this, 'init_components'));
+        \add_action('plugins_loaded', array($this, 'init_components'));
     }
     
     /**
@@ -117,7 +117,7 @@ class Plugin {
      */
     public function init_components() {
         // Initialize GitHub API
-        $settings = get_option('github_deployer_settings', array());
+        $settings = \get_option('github_deployer_settings', array());
         $this->github_api = new GitHub_API(isset($settings['token']) ? $settings['token'] : '');
         
         // Initialize Deployer
@@ -274,13 +274,13 @@ class Plugin {
         $installer->deactivate();
         
         // Unschedule the auto-update cron event
-        $timestamp = wp_next_scheduled('github_deployer_check_updates');
+        $timestamp = \wp_next_scheduled('github_deployer_check_updates');
         if ($timestamp) {
-            wp_unschedule_event($timestamp, 'github_deployer_check_updates');
+            \wp_unschedule_event($timestamp, 'github_deployer_check_updates');
         }
         
         // Clear rewrite rules
-        flush_rewrite_rules();
+        \flush_rewrite_rules();
     }
     
     /**
