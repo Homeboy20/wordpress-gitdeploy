@@ -92,8 +92,14 @@ class Plugin {
      * Initialize plugin hooks
      */
     private function init_hooks() {
-        // Load translations
-        add_action('plugins_loaded', array($this, 'load_textdomain'));
+        // Text domain
+        \add_action('plugins_loaded', array($this, 'load_textdomain'));
+        
+        // Admin menu
+        \add_action('admin_menu', array($this->settings, 'add_admin_menu'));
+        
+        // Admin scripts
+        \add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
         
         // Initialize components
         add_action('plugins_loaded', array($this, 'init_components'));
@@ -103,7 +109,7 @@ class Plugin {
      * Load plugin textdomain
      */
     public function load_textdomain() {
-        load_plugin_textdomain('github-deployer', false, dirname(dirname(plugin_basename(__FILE__))) . '/languages/');
+        \load_plugin_textdomain('github-deployer', false, dirname(\plugin_basename(GITHUB_DEPLOYER_FILE)) . '/languages');
     }
     
     /**
@@ -225,32 +231,35 @@ class Plugin {
     /**
      * Plugin activation
      */
-    public function activate() {
+    public static function activate() {
         // Create database tables
         $repositories = new Repositories();
         $repositories->create_table();
         
         // Set up scheduler for updates
-        if (!wp_next_scheduled('github_deployer_check_updates')) {
-            wp_schedule_event(time(), 'twicedaily', 'github_deployer_check_updates');
+        if (!\wp_next_scheduled('github_deployer_check_updates')) {
+            \wp_schedule_event(time(), 'twicedaily', 'github_deployer_check_updates');
         }
         
         // Try to auto-connect to the official repository
-        $this->maybe_connect_official_repo();
+        self::maybe_connect_official_repo();
         
-        do_action('github_deployer_activated');
+        \do_action('github_deployer_activated');
     }
     
     /**
      * Try to automatically connect to the official github-deployer repository
      */
-    private function maybe_connect_official_repo() {
+    private static function maybe_connect_official_repo() {
         // Only try if we have no repositories yet
-        $deployed_repos = get_option('github_deployer_deployed_repos', array());
+        $deployed_repos = \get_option('github_deployer_deployed_repos', array());
         
         if (empty($deployed_repos)) {
+            // Get plugin instance
+            $plugin = self::get_instance();
+            
             // Get repository manager
-            $repo_manager = $this->get_repository_manager();
+            $repo_manager = $plugin->get_repository_manager();
             
             // Try to connect to the official repository
             $repo_manager->connect_to_specific_repository('https://github.com/Homeboy20/wordpress-gitdeploy');

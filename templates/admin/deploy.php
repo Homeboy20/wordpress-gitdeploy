@@ -283,15 +283,15 @@ if (!$table_exists) {
             <tbody>
                 <?php foreach ($tracked_repos as $repo_data): ?>
                 <tr>
-                    <td><?php echo esc_html($repo_data['owner'] . '/' . $repo_data['repo']); ?></td>
-                    <td><?php echo esc_html($repo_data['ref']); ?></td>
-                    <td><?php echo esc_html($repo_data['type']); ?></td>
-                    <td><?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $repo_data['last_updated'])); ?></td>
+                    <td><?php echo esc_html(is_object($repo_data) ? $repo_data->owner . '/' . $repo_data->repo : $repo_data['owner'] . '/' . $repo_data['repo']); ?></td>
+                    <td><?php echo esc_html(is_object($repo_data) ? $repo_data->ref : $repo_data['ref']); ?></td>
+                    <td><?php echo esc_html(is_object($repo_data) ? $repo_data->type : $repo_data['type']); ?></td>
+                    <td><?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), is_object($repo_data) ? $repo_data->last_updated : $repo_data['last_updated'])); ?></td>
                     <td>
                         <form action="<?php echo esc_url(admin_url('admin-post.php')); ?>" method="post">
                             <input type="hidden" name="action" value="github_deployer_disable_auto_update">
-                            <input type="hidden" name="owner" value="<?php echo esc_attr($repo_data['owner']); ?>">
-                            <input type="hidden" name="repo" value="<?php echo esc_attr($repo_data['repo']); ?>">
+                            <input type="hidden" name="owner" value="<?php echo esc_attr(is_object($repo_data) ? $repo_data->owner : $repo_data['owner']); ?>">
+                            <input type="hidden" name="repo" value="<?php echo esc_attr(is_object($repo_data) ? $repo_data->repo : $repo_data['repo']); ?>">
                             <?php wp_nonce_field('github_deployer_disable_auto_update'); ?>
                             <button type="submit" class="button button-secondary"><?php esc_html_e('Disable Auto-Updates', 'github-deployer'); ?></button>
                         </form>
