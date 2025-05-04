@@ -62,10 +62,15 @@ class Deployer {
             $auth_download_url = $this->github_api->get_archive_download_url($owner, $repo, $ref);
             
             if (is_wp_error($auth_download_url)) {
+                // Include the original API error message for better debugging
+                $original_error_message = '(' . $auth_download_url->get_error_code() . ') ' . $auth_download_url->get_error_message();
                 return new \WP_Error(
                     'private_repo_access_error',
-                    __('Failed to access private repository. Please check your GitHub token permissions.', 'github-deployer'),
-                    $auth_download_url
+                    sprintf(
+                        __('Failed to access private repository. Please check your GitHub token permissions. [%s]', 'github-deployer'),
+                        $original_error_message
+                    ),
+                    $auth_download_url // Pass original error object as data
                 );
             }
             
