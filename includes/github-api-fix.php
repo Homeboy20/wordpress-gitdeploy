@@ -1,0 +1,1 @@
+<?php\n/**\n * GitHub API Fix\n * This file contains the fix for the GitHub API class\n */\n\nnamespace GitHub_Deployer;\n\n// Fix for handling both array and object responses\nfunction process_github_api_response(\) {\n    if (is_array(\)) {\n        \ = \;\n        \ = new \stdClass();\n        \->items = \;\n    }\n    return \;\n}
