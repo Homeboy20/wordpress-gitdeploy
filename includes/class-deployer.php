@@ -166,6 +166,9 @@ class Deployer {
     }
     
     private function extract_zip($zip_file, $destination, $repo_name) {
+        // Log entry point
+        error_log("GitHub Deployer extract_zip: Starting extraction for {$repo_name} to {$destination}");
+
         if (!function_exists('WP_Filesystem')) {
             require_once ABSPATH . 'wp-admin/includes/file.php';
         }
@@ -173,32 +176,64 @@ class Deployer {
         WP_Filesystem();
         global $wp_filesystem;
         
+        // Check if WP_Filesystem initialized correctly
+        if ( ! $wp_filesystem ) {
+            error_log("GitHub Deployer extract_zip: WP_Filesystem failed to initialize.");
+            return new \WP_Error('filesystem_error', __('Could not initialize WordPress filesystem.', 'github-deployer'));
+        }
+
         $unzip_result = unzip_file($zip_file, $destination);
+        
+        // Log unzip result
         if (is_wp_error($unzip_result)) {
+            error_log("GitHub Deployer extract_zip: unzip_file failed for {$repo_name}. Error: " . $unzip_result->get_error_message());
             return $unzip_result;
+        } else {
+             error_log("GitHub Deployer extract_zip: unzip_file completed for {$repo_name}. Result: " . print_r($unzip_result, true));
         }
         
         // GitHub zip files have a root directory with the ref in the name
         // We need to find that directory and rename it to the proper plugin/theme name
         $temp_dir = null;
+        
+        // Ensure destination exists and is readable before listing
+        if (!$wp_filesystem->exists($destination) || !$wp_filesystem->is_readable($destination)) {
+             error_log("GitHub Deployer extract_zip: Destination directory {$destination} does not exist or is not readable after unzip.");
+             return new \WP_Error('extraction_failed', __('Extraction destination directory not found or not readable after unzip.', 'github-deployer'));
+        }
+        
         $files = $wp_filesystem->dirlist($destination);
         
-        foreach ($files as $file) {
-            if (strpos($file['name'], $repo_name) === 0) {
-                $temp_dir = $file['name'];
-                break;
+        // Log the files found after extraction
+        error_log("GitHub Deployer extract_zip: Files found in {$destination} after unzip for {$repo_name}: " . print_r($files, true));
+        
+        if ( ! $files ) {
+            error_log("GitHub Deployer extract_zip: dirlist returned false or empty for {$destination}. Possible permission issue?");
+        } else {
+            foreach ($files as $file) {
+                // Check if it's a directory and starts with the repo name
+                if (isset($file['type']) && $file['type'] === 'd' && isset($file['name']) && strpos($file['name'], $repo_name) === 0) {
+                    $temp_dir = $file['name'];
+                    error_log("GitHub Deployer extract_zip: Found potential temp directory: {$temp_dir}");
+                    break;
+                }
             }
         }
         
         if (!$temp_dir) {
-            return new \WP_Error('extraction_failed', __('Could not locate extracted files', 'github-deployer'));
+            error_log("GitHub Deployer extract_zip: Failed to find temp directory starting with '{$repo_name}' in {$destination}");
+            return new \WP_Error('extraction_failed', __('Could not locate extracted files. The archive might have an unexpected structure.', 'github-deployer'));
         }
         
+        // Log found temp directory
+        error_log("GitHub Deployer extract_zip: Using temp directory: {$temp_dir}");
+
         // Validate the repository structure for WordPress plugin/theme
         $extracted_path = trailingslashit($destination) . $temp_dir;
         $is_valid = $this->validate_repository_structure($extracted_path);
         
         if (is_wp_error($is_valid)) {
+            error_log("GitHub Deployer extract_zip: Invalid repository structure for {$extracted_path}. Error: " . $is_valid->get_error_message());
             // Clean up the extracted directory
             $wp_filesystem->delete($extracted_path, true);
             return $is_valid;
@@ -207,21 +242,30 @@ class Deployer {
         $final_dir = $repo_name;
         $final_path = trailingslashit($destination) . $final_dir;
         
+        // Log paths before moving
+        error_log("GitHub Deployer extract_zip: Moving from {$extracted_path} to {$final_path}");
+
         // If destination exists, remove it first
         if ($wp_filesystem->exists($final_path)) {
-            $wp_filesystem->delete($final_path, true);
+             error_log("GitHub Deployer extract_zip: Removing existing directory at {$final_path}");
+            if (!$wp_filesystem->delete($final_path, true)) {
+                 error_log("GitHub Deployer extract_zip: Failed to remove existing directory at {$final_path}");
+                 return new \WP_Error('delete_failed', __('Could not remove existing directory before update.', 'github-deployer'));
+            }
         }
         
         // Rename the directory
         $rename_result = $wp_filesystem->move(
-            trailingslashit($destination) . $temp_dir,
-            $final_path
+            $extracted_path, // Source
+            $final_path // Destination
         );
         
         if (!$rename_result) {
+             error_log("GitHub Deployer extract_zip: Failed to move {$extracted_path} to {$final_path}");
             return new \WP_Error('rename_failed', __('Failed to rename extracted directory', 'github-deployer'));
         }
-        
+
+        error_log("GitHub Deployer extract_zip: Successfully extracted and moved {$repo_name}.");
         return true;
     }
     

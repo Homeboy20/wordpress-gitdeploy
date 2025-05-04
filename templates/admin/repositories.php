@@ -157,7 +157,7 @@ try {
                                             ?>
                                         </td>
                                         <td class="actions">
-                                            <div class="action-buttons">
+                                            <div class="action-buttons" style="display: flex; flex-wrap: wrap; gap: 5px;">
                                                 <?php if (isset($repo['connected']) && $repo['connected']): ?>
                                                     <form action="<?php echo esc_url(admin_url('admin-post.php')); ?>" method="post" class="disconnect-form">
                                                         <input type="hidden" name="action" value="github_deployer_disconnect_repo">
