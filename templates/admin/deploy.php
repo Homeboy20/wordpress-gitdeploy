@@ -281,19 +281,42 @@ if (!$table_exists) {
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($tracked_repos as $repo_data): ?>
+                <?php foreach ($tracked_repos as $repo_data): 
+                    // Ensure repo_data is consistently an object for easier access
+                    if (is_array($repo_data)) {
+                        $repo_data = (object) $repo_data;
+                    }
+                    
+                    // Prepare variables safely
+                    $repo_name = isset($repo_data->name) ? $repo_data->name : (isset($repo_data->repo) ? $repo_data->repo : 'N/A');
+                    $owner = isset($repo_data->owner) ? $repo_data->owner : 'N/A';
+                    $branch_or_ref = isset($repo_data->branch) ? $repo_data->branch : (isset($repo_data->ref) ? $repo_data->ref : 'N/A');
+                    $type = isset($repo_data->type) ? $repo_data->type : 'N/A';
+                    $last_updated_raw = isset($repo_data->last_updated) ? $repo_data->last_updated : null;
+                    $last_updated_formatted = $last_updated_raw ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), is_numeric($last_updated_raw) ? $last_updated_raw : strtotime($last_updated_raw)) : 'N/A';
+                ?>
                 <tr>
-                    <td><?php echo esc_html(is_object($repo_data) ? $repo_data->owner . '/' . $repo_data->repo : $repo_data['owner'] . '/' . $repo_data['repo']); ?></td>
-                    <td><?php echo esc_html(is_object($repo_data) ? $repo_data->ref : $repo_data['ref']); ?></td>
-                    <td><?php echo esc_html(is_object($repo_data) ? $repo_data->type : $repo_data['type']); ?></td>
-                    <td><?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), is_object($repo_data) ? $repo_data->last_updated : $repo_data['last_updated'])); ?></td>
+                    <td><?php echo esc_html($owner . '/' . $repo_name); ?></td>
+                    <td><?php echo esc_html($branch_or_ref); ?></td>
+                    <td><?php echo esc_html($type); ?></td>
+                    <td><?php echo esc_html($last_updated_formatted); ?></td>
                     <td>
-                        <form action="<?php echo esc_url(admin_url('admin-post.php')); ?>" method="post">
+                        <form action="<?php echo esc_url(admin_url('admin-post.php')); ?>" method="post" style="display:inline-block; margin-right: 5px;">
                             <input type="hidden" name="action" value="github_deployer_disable_auto_update">
-                            <input type="hidden" name="owner" value="<?php echo esc_attr(is_object($repo_data) ? $repo_data->owner : $repo_data['owner']); ?>">
-                            <input type="hidden" name="repo" value="<?php echo esc_attr(is_object($repo_data) ? $repo_data->repo : $repo_data['repo']); ?>">
-                            <?php wp_nonce_field('github_deployer_disable_auto_update'); ?>
+                            <input type="hidden" name="owner" value="<?php echo esc_attr($owner); ?>">
+                            <input type="hidden" name="repo" value="<?php echo esc_attr($repo_name); ?>">
+                            <?php wp_nonce_field('github_deployer_disable_auto_update', 'github_deployer_disable_auto_update_nonce'); ?>
                             <button type="submit" class="button button-secondary"><?php esc_html_e('Disable Auto-Updates', 'github-deployer'); ?></button>
+                        </form>
+                        <form action="<?php echo esc_url(admin_url('admin-post.php')); ?>" method="post" style="display:inline-block;">
+                             <input type="hidden" name="action" value="github_deployer_deploy">
+                             <input type="hidden" name="owner" value="<?php echo esc_attr($owner); ?>">
+                             <input type="hidden" name="repo" value="<?php echo esc_attr($repo_name); ?>">
+                             <input type="hidden" name="ref" value="<?php echo esc_attr($branch_or_ref); ?>">
+                             <input type="hidden" name="type" value="<?php echo esc_attr($type); ?>">
+                             <input type="hidden" name="update_existing" value="1"> 
+                             <?php wp_nonce_field('github_deployer_deploy', 'github_deployer_deploy_nonce'); ?>
+                             <button type="submit" class="button button-primary"><?php esc_html_e('Deploy Update', 'github-deployer'); ?></button>
                         </form>
                     </td>
                 </tr>
