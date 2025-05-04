@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GitHub Deployer for WordPress
  * Description: Directly deploy plugins and themes from GitHub to your WordPress site. Now with full private repository support!
- * Version: 2.1.0
+ * Version: 2.1.3
  * Author: Ndosa
  * Author URI: https://ndosa.com
  * License: GPL-2.0+
@@ -47,9 +47,16 @@ require_once GITHUB_DEPLOYER_PLUGIN_DIR . 'includes/class-backup-manager.php';
 require_once GITHUB_DEPLOYER_PLUGIN_DIR . 'includes/class-diff-viewer.php';
 require_once GITHUB_DEPLOYER_PLUGIN_DIR . 'includes/class-notification-manager.php';
 
+// Debug: Check if class and method exist before registration
+if (class_exists('GitHub_Deployer\Plugin') && method_exists('GitHub_Deployer\Plugin', 'activate')) {
+    error_log('GitHub Deployer Debug: Plugin class and activate method found before registration.');
+} else {
+    error_log('GitHub Deployer Debug: Plugin class or activate method NOT found before registration.');
+}
+
 // Register activation/deactivation hooks
-register_activation_hook(__FILE__, array('GitHub_Deployer\\Plugin', 'activate'));
-register_deactivation_hook(__FILE__, array('GitHub_Deployer\\Plugin', 'deactivate'));
+register_activation_hook(__FILE__, array('GitHub_Deployer\Plugin', 'activate'));
+register_deactivation_hook(__FILE__, array('GitHub_Deployer\Plugin', 'deactivate'));
 
 // Initialize the plugin immediately to ensure settings are registered early
 GitHub_Deployer\Plugin::get_instance();
