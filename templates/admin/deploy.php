@@ -197,13 +197,15 @@ if (!$table_exists) {
                                 <td>
                                     <fieldset>
                                         <label class="github-deployer-checkbox-label">
-                                            <input type="checkbox" name="update_existing" value="1" <?php echo $update_mode ? 'checked' : ''; ?>>
-                                            <span><?php esc_html_e('Update existing installation', 'github-deployer'); ?></span>
+                                            <?php $update_mode_bool = (bool) $update_mode; // Ensure boolean ?>
+                                            <input type="checkbox" name="update_existing" value="1" <?php echo $update_mode_bool ? 'checked' : ''; ?>>
+                                            <span><?php echo esc_html(__('Update existing installation', 'github-deployer')); ?></span>
                                         </label>
-                                        <p class="description"><?php esc_html_e('Check this if you want to update an existing plugin or theme.', 'github-deployer'); ?></p>
+                                        <p class="description"><?php echo esc_html(__('Check this if you want to update an existing plugin or theme.', 'github-deployer')); ?></p>
                                         
                                         <label class="github-deployer-checkbox-label" style="margin-top: 10px; display: block;">
-                                            <input type="checkbox" name="enable_auto_update" value="1" checked>
+                                            <?php // Assuming 'checked' is the desired default state for enable_auto_update ?>
+                                            <input type="checkbox" name="enable_auto_update" value="1" checked> 
                                             <span><?php esc_html_e('Enable auto-updates for this repository', 'github-deployer'); ?></span>
                                         </label>
                                         <p class="description"><?php esc_html_e('GitHub Deployer will check for updates to this repository automatically.', 'github-deployer'); ?></p>
