@@ -82,7 +82,7 @@ try {
                 
                 <div id="github-deployer-repo-list" style="display: none;">
                     <div class="github-deployer-loading"><?php esc_html_e('Loading repositories...', 'github-deployer'); ?></div>
-                    <div class="content github-deployer-repo-grid"></div>
+                    <div class="content"></div>
                     <div class="pagination"></div>
                 </div>
             </div>
