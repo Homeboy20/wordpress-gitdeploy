@@ -170,10 +170,14 @@ if (!$table_exists) {
                                 </td>
                             </tr>
                             <tr>
-                                <th scope="row"><label for="ref"><?php esc_html_e('Branch/Tag', 'github-deployer'); ?></label></th>
+                                <th scope="row"><label for="ref"><?php esc_html_e('Branch/Tag/Release', 'github-deployer'); ?></label></th>
                                 <td>
-                                    <input type="text" id="ref" name="ref" class="regular-text" placeholder="<?php esc_attr_e('e.g., main, v2.1.0', 'github-deployer'); ?>" value="main">
-                                    <p class="description"><?php esc_html_e('Branch, tag, or commit reference (defaults to main branch)', 'github-deployer'); ?></p>
+                                    <select id="ref" name="ref" class="regular-text">
+                                        <option value="main" selected><?php esc_html_e('main (default branch)', 'github-deployer'); ?></option>
+                                        <!-- Options will be populated by JavaScript -->
+                                    </select>
+                                    <p class="description"><?php esc_html_e('Select a branch, tag, or release to deploy.', 'github-deployer'); ?></p>
+                                    <span class="spinner" style="float: none; vertical-align: middle; margin-left: 5px;"></span>
                                 </td>
                             </tr>
                             <tr>

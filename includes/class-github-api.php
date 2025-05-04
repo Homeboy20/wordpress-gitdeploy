@@ -75,6 +75,17 @@ class GitHub_API {
     }
     
     /**
+     * Get releases for a repository
+     *
+     * @param string $owner Owner of the repository.
+     * @param string $repo  Repository name.
+     * @return array|\WP_Error List of releases or error.
+     */
+    public function get_releases($owner, $repo) {
+        return $this->request("repos/{$owner}/{$repo}/releases");
+    }
+    
+    /**
      * Get the latest commit from a branch
      *
      * @param string $owner Owner of the repository.
@@ -531,6 +542,7 @@ class GitHub_API {
      * @return array|\WP_Error Processed response data or error
      */
     private function process_response($response) {
+        // Fix for handling both array and object responses from GitHub API
         if (\is_wp_error($response)) {
             return $response;
         }
@@ -544,7 +556,8 @@ class GitHub_API {
         $response_headers = array(
             'x-ratelimit-remaining' => isset($headers['x-ratelimit-remaining']) ? $headers['x-ratelimit-remaining'] : null,
             'github-authentication-token-expiration' => isset($headers['github-authentication-token-expiration']) ? $headers['github-authentication-token-expiration'] : null,
-            'x-oauth-scopes' => isset($headers['x-oauth-scopes']) ? $headers['x-oauth-scopes'] : null
+            'x-oauth-scopes' => isset($headers['x-oauth-scopes']) ? $headers['x-oauth-scopes'] : null,
+            'location' => isset($headers['location']) ? $headers['location'] : null
         );
         
         // Check for API rate limits
@@ -575,6 +588,9 @@ class GitHub_API {
             $data->items = $array_data;
             $data->headers = $response_headers;
         }
+        
+        // Apply our API response filter for additional processing
+        $data = \apply_filters('github_deployer_api_response', $data);
         
         return $data;
     }

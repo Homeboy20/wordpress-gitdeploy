@@ -41,14 +41,16 @@ class AJAX {
             wp_send_json_error(array('message' => format_error_message($repo_info)));
         }
         
-        // Get branches and tags
+        // Get branches, tags, and releases
         $branches = get_github_branches($owner, $repo);
         $tags = get_github_tags($owner, $repo);
+        $releases = get_github_releases($owner, $repo);
         
         // Prepare response data
         $data = (array) $repo_info;
         $data['branches'] = is_wp_error($branches) ? array() : $branches;
         $data['tags'] = is_wp_error($tags) ? array() : $tags;
+        $data['releases'] = is_wp_error($releases) ? array() : $releases;
         
         wp_send_json_success($data);
     }
