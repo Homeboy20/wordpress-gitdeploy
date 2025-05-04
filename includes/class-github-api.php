@@ -427,16 +427,35 @@ class GitHub_API {
      */
     public function get_archive_download_url($owner, $repo, $ref) {
         $endpoint = "repos/{$owner}/{$repo}/zipball/{$ref}";
-        $response = $this->request($endpoint, true);
+        // Make the request but don't follow the redirect (redirection=0 set in request method)
+        $response = $this->request($endpoint, true); 
         
-        // The API will redirect to the actual download URL
-        if (!\is_wp_error($response) && isset($response->headers['location'])) {
-            return $response->headers['location'];
-        } elseif (!\is_wp_error($response)) {
-            return new \WP_Error('github_api_error', \__('Failed to get download URL for private repository', 'github-deployer'));
+        // Check if the request resulted in an error
+        if (is_wp_error($response)) {
+            // Check if the error object contains headers (it might if process_response added them)
+            $headers = isset($response->error_data['headers']) ? $response->error_data['headers'] : null;
+            // Even on error, check if maybe a redirect URL was somehow captured
+            if ($headers && isset($headers['location'])) {
+                 // Log this unusual case but attempt to return the URL
+                 error_log("GitHub Deployer: Got redirect URL despite WP_Error in get_archive_download_url for {$owner}/{$repo}/{$ref}");
+                 return $headers['location'];
+            }
+            // Otherwise, return the original error
+            return $response; 
         }
-        
-        return $response;
+
+        // If no error, check the response object (processed by process_response)
+        // for the location header
+        if (isset($response->headers) && isset($response->headers['location'])) {
+            return $response->headers['location']; // Return the URL string directly
+        }
+
+        // If no error and no location header, it's an unexpected situation
+        error_log("GitHub Deployer: Failed to get redirect URL from get_archive_download_url for {$owner}/{$repo}/{$ref}. Response: " . print_r($response, true));
+        return new \WP_Error(
+            'github_api_no_redirect_url',
+             __('Could not retrieve the download URL for the private repository archive. The API did not provide a redirect location.', 'github-deployer')
+        );
     }
     
     /**
@@ -548,11 +567,10 @@ class GitHub_API {
         }
         
         $response_code = \wp_remote_retrieve_response_code($response);
-        $body = \wp_remote_retrieve_body($response);
         $headers = \wp_remote_retrieve_headers($response);
-        $data = json_decode($body);
-        
-        // Store headers for later access
+        $body = \wp_remote_retrieve_body($response);
+
+        // Store essential headers regardless of response code initially
         $response_headers = array(
             'x-ratelimit-remaining' => isset($headers['x-ratelimit-remaining']) ? $headers['x-ratelimit-remaining'] : null,
             'github-authentication-token-expiration' => isset($headers['github-authentication-token-expiration']) ? $headers['github-authentication-token-expiration'] : null,
@@ -560,20 +578,39 @@ class GitHub_API {
             'location' => isset($headers['location']) ? $headers['location'] : null
         );
         
+        // Handle Redirects (like zipball URL) - return just headers including Location
+        if ($response_code >= 300 && $response_code < 400 && isset($response_headers['location'])) {
+            // For redirects, we primarily care about the location and rate limits
+            // Return a simple object containing only the necessary headers
+            $redirect_data = new \stdClass();
+            $redirect_data->headers = $response_headers;
+            // Apply filter even for redirects, maybe someone wants to modify headers
+            return \apply_filters('github_deployer_api_response', $redirect_data); 
+        }
+
         // Check for API rate limits
-        if (isset($headers['x-ratelimit-remaining']) && intval($headers['x-ratelimit-remaining']) < 10) {
-            error_log('GitHub Deployer: API rate limit getting low. ' . $headers['x-ratelimit-remaining'] . ' requests remaining.');
+        if (isset($response_headers['x-ratelimit-remaining']) && intval($response_headers['x-ratelimit-remaining']) < 10) {
+            error_log('GitHub Deployer: API rate limit getting low. ' . $response_headers['x-ratelimit-remaining'] . ' requests remaining.');
         }
         
+        // Try to decode JSON body only for non-redirect responses
+        $data = json_decode($body);
+        
+        // Handle >= 400 Errors
         if ($response_code >= 400) {
-            $error_message = is_object($data) && isset($data->message) ? $data->message : 'Unknown error';
-            return new \WP_Error(
+            $error_message = is_object($data) && isset($data->message) ? $data->message : 'Unknown error (' . $response_code . ') from body: ' . $body;
+            $error_data = is_object($data) ? $data : null; // Pass decoded data if available
+            $wp_error = new \WP_Error(
                 'github_api_error',
                 sprintf(\__('GitHub API Error (%d): %s', 'github-deployer'), $response_code, $error_message),
-                $data
+                $error_data
             );
+            // Attach headers to the error object for context
+            $wp_error->add_data(['headers' => $response_headers], 'github_api_error');
+            return $wp_error;
         }
         
+        // Process Successful (2xx) responses
         // If data is an object, add headers as a property
         if (is_object($data)) {
             $data->headers = $response_headers;
@@ -587,6 +624,18 @@ class GitHub_API {
             $data = new \stdClass();
             $data->items = $array_data;
             $data->headers = $response_headers;
+        } 
+        // Handle cases where body is not JSON but response is 2xx (rare for GitHub API)
+        elseif ($data === null && json_last_error() !== JSON_ERROR_NONE) {
+             $data = new \stdClass(); // Create an object anyway
+             $data->raw_body = $body; // Store the raw body
+             $data->headers = $response_headers;
+        } else {
+            // If json_decode resulted in something else (e.g. null, false, number) - wrap it
+             $decoded_value = $data; // Keep original decoded value
+             $data = new \stdClass();
+             $data->value = $decoded_value;
+             $data->headers = $response_headers;
         }
         
         // Apply our API response filter for additional processing

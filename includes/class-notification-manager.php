@@ -100,15 +100,19 @@ class Notification_Manager {
      * @return array Sanitized settings
      */
     public function sanitize_settings($input) {
+        // Ensure input is an array, default to empty array if null or not array
+        $input = is_array($input) ? $input : [];
+
         $output = array(
-            'enable_email' => isset($input['enable_email']) && $input['enable_email'] ? true : false,
-            'email_recipients' => sanitize_text_field($input['email_recipients']),
-            'enable_slack' => isset($input['enable_slack']) && $input['enable_slack'] ? true : false,
-            'slack_webhook_url' => esc_url_raw($input['slack_webhook_url']),
-            'notify_on_deploy' => isset($input['notify_on_deploy']) && $input['notify_on_deploy'] ? true : false,
-            'notify_on_update' => isset($input['notify_on_update']) && $input['notify_on_update'] ? true : false,
-            'notify_on_error' => isset($input['notify_on_error']) && $input['notify_on_error'] ? true : false,
-            'notify_on_rollback' => isset($input['notify_on_rollback']) && $input['notify_on_rollback'] ? true : false
+            // Use null coalescing operator for cleaner defaults
+            'enable_email' => !empty($input['enable_email']),
+            'email_recipients' => sanitize_text_field($input['email_recipients'] ?? ''), 
+            'enable_slack' => !empty($input['enable_slack']),
+            'slack_webhook_url' => esc_url_raw($input['slack_webhook_url'] ?? ''), 
+            'notify_on_deploy' => !empty($input['notify_on_deploy']),
+            'notify_on_update' => !empty($input['notify_on_update']),
+            'notify_on_error' => !empty($input['notify_on_error']),
+            'notify_on_rollback' => !empty($input['notify_on_rollback'])
         );
         
         return $output;
