@@ -130,7 +130,7 @@ if (!$table_exists) {
                 </div>
                 <?php endif; ?>
                 
-                <form action="<?php echo esc_url(admin_url('admin-post.php')); ?>" method="post" class="github-deployer-form">
+                <form id="github-deployer-form" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" method="post" class="github-deployer-form">
                     <input type="hidden" name="action" value="github_deployer_deploy">
                     <?php wp_nonce_field('github_deployer_deploy', 'github_deployer_deploy_nonce'); ?>
                     
@@ -158,44 +158,38 @@ if (!$table_exists) {
                     <?php else: ?>
                         <table class="form-table">
                             <tr>
-                                <th scope="row"><label for="owner"><?php esc_html_e('Repository Owner', 'github-deployer'); ?></label></th>
+                                <th scope="row"><label for="github-deployer-owner"><?php esc_html_e('Repository Owner', 'github-deployer'); ?></label></th>
                                 <td>
-                                    <input type="text" id="owner" name="owner" class="regular-text" placeholder="<?php esc_attr_e('e.g., wordpress', 'github-deployer'); ?>" required>
+                                    <input type="text" id="github-deployer-owner" name="owner" class="regular-text" placeholder="<?php esc_attr_e('e.g., wordpress', 'github-deployer'); ?>" required>
                                     <p class="description"><?php esc_html_e('GitHub username or organization name', 'github-deployer'); ?></p>
                                 </td>
                             </tr>
                             <tr>
-                                <th scope="row"><label for="repo"><?php esc_html_e('Repository Name', 'github-deployer'); ?></label></th>
+                                <th scope="row"><label for="github-deployer-repo"><?php esc_html_e('Repository Name', 'github-deployer'); ?></label></th>
                                 <td>
-                                    <input type="text" id="repo" name="repo" class="regular-text" placeholder="<?php esc_attr_e('e.g., gutenberg', 'github-deployer'); ?>" required>
+                                    <input type="text" id="github-deployer-repo" name="repo" class="regular-text" placeholder="<?php esc_attr_e('e.g., gutenberg', 'github-deployer'); ?>" required>
                                     <p class="description"><?php esc_html_e('Name of the repository', 'github-deployer'); ?></p>
                                 </td>
                             </tr>
                             <tr>
-                                <th scope="row"><label for="ref"><?php esc_html_e('Branch/Tag/Release', 'github-deployer'); ?></label></th>
+                                <th scope="row"><label for="github-deployer-ref"><?php esc_html_e('Branch/Tag/Release', 'github-deployer'); ?></label></th>
                                 <td>
-                                    <select id="ref" name="ref" class="regular-text">
+                                    <select id="github-deployer-ref" name="ref" class="regular-text">
                                         <option value="main" selected><?php esc_html_e('main (default branch)', 'github-deployer'); ?></option>
-                                        <!-- Options will be populated by JavaScript -->
                                     </select>
-                                    <p class="description"><?php esc_html_e('Select a branch, tag, or release to deploy.', 'github-deployer'); ?></p>
-                                    <span class="spinner" style="float: none; vertical-align: middle; margin-left: 5px;"></span>
+                                    <span class="spinner" id="github-deployer-ref-spinner" style="float: none; vertical-align: middle; margin-left: 5px;"></span>
+                                    <p class="description"><?php esc_html_e('Populated automatically when you enter the owner and repo name above.', 'github-deployer'); ?></p>
                                 </td>
                             </tr>
                             <tr>
-                                <th scope="row"><?php esc_html_e('Type', 'github-deployer'); ?></th>
+                                <th scope="row"><label for="github-deployer-type"><?php esc_html_e('Type', 'github-deployer'); ?></label></th>
                                 <td>
-                                    <fieldset>
-                                        <label class="github-deployer-radio-label">
-                                            <input type="radio" name="type" value="plugin" checked>
-                                            <span><?php esc_html_e('Plugin', 'github-deployer'); ?></span>
-                                        </label>
-                                        <br>
-                                        <label class="github-deployer-radio-label">
-                                            <input type="radio" name="type" value="theme">
-                                            <span><?php esc_html_e('Theme', 'github-deployer'); ?></span>
-                                        </label>
-                                    </fieldset>
+                                    <select id="github-deployer-type" name="type" class="regular-text">
+                                        <option value="plugin" selected><?php esc_html_e('Plugin', 'github-deployer'); ?></option>
+                                        <option value="theme"><?php esc_html_e('Theme', 'github-deployer'); ?></option>
+                                        <option value="mu-plugin"><?php esc_html_e('Must-Use Plugin (mu-plugin)', 'github-deployer'); ?></option>
+                                    </select>
+                                    <p class="description"><?php esc_html_e('Select the type of WordPress installation.', 'github-deployer'); ?></p>
                                 </td>
                             </tr>
                             <tr>
@@ -222,7 +216,7 @@ if (!$table_exists) {
                     <?php endif; ?>
                     
                     <div class="github-deployer-card-footer">
-                        <button type="submit" class="github-deployer-button github-deployer-button-primary">
+                        <button type="submit" id="github-deployer-submit" class="github-deployer-button github-deployer-button-primary">
                             <?php 
                             if ($update_mode) {
                                 esc_html_e('Update Now', 'github-deployer');

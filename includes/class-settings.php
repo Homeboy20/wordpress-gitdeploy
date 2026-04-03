@@ -148,25 +148,32 @@ class Settings {
             true
         );
         
+        $gd_settings_js = get_option('github_deployer_settings', array());
+        $gd_has_token   = !empty($gd_settings_js['token']);
         wp_localize_script('github-deployer-admin', 'github_deployer', array(
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('github_deployer_nonce'),
+            'ajax_url'      => admin_url('admin-ajax.php'),
+            'nonce'         => wp_create_nonce('github_deployer_nonce'),
+            'has_token'     => $gd_has_token,
+            'settings_url'  => admin_url('admin.php?page=github-deployer&tab=settings'),
             'strings' => array(
-                'loading' => __('Loading repository information...', 'github-deployer'),
-                'error' => __('Error loading repository data. Please check the repository owner and name.', 'github-deployer'),
-                'branches' => __('Branches', 'github-deployer'),
-                'tags' => __('Tags', 'github-deployer'),
-                'select_branch' => __('Select a branch', 'github-deployer'),
-                'select_tag' => __('Select a tag', 'github-deployer'),
-                'plugin_exists' => __('This plugin is already installed. Checking "Update Existing" will update it with the selected version.', 'github-deployer'),
-                'theme_exists' => __('This theme is already installed. Checking "Update Existing" will update it with the selected version.', 'github-deployer'),
-                'deploy_button' => __('Deploy', 'github-deployer'),
-                'update_button' => __('Update', 'github-deployer'),
+                'loading'              => __('Loading repository information...', 'github-deployer'),
+                'error'                => __('Error loading repository data. Please check the repository owner and name.', 'github-deployer'),
+                'branches'             => __('Branches', 'github-deployer'),
+                'tags'                 => __('Tags', 'github-deployer'),
+                'releases'             => __('Releases', 'github-deployer'),
+                'default_branch'       => __('Default Branch', 'github-deployer'),
+                'error_fetching_refs'  => __('Error fetching branches/tags. Check owner and repo name.', 'github-deployer'),
+                'select_branch'        => __('Select a branch', 'github-deployer'),
+                'select_tag'           => __('Select a tag', 'github-deployer'),
+                'plugin_exists'        => __('This plugin is already installed. Checking "Update Existing" will update it with the selected version.', 'github-deployer'),
+                'theme_exists'         => __('This theme is already installed. Checking "Update Existing" will update it with the selected version.', 'github-deployer'),
+                'deploy_button'        => __('Deploy Now', 'github-deployer'),
+                'update_button'        => __('Update Now', 'github-deployer'),
                 'deploy_and_track_button' => __('Deploy and Track', 'github-deployer'),
-                'no_license' => __('No license specified', 'github-deployer'),
+                'no_license'           => __('No license specified', 'github-deployer'),
                 'repo_already_tracked' => __('This repository is already being tracked for auto-updates.', 'github-deployer'),
-                'auto_update_enabled' => __('Auto-updates enabled. This repository will be checked for updates hourly.', 'github-deployer'),
-                'auto_update_disabled' => __('Auto-updates disabled for this repository.', 'github-deployer')
+                'auto_update_enabled'  => __('Auto-updates enabled. This repository will be checked for updates hourly.', 'github-deployer'),
+                'auto_update_disabled' => __('Auto-updates disabled for this repository.', 'github-deployer'),
             )
         ));
     }
