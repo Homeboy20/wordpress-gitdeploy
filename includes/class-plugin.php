@@ -254,14 +254,17 @@ class Plugin {
     private static function maybe_connect_official_repo() {
         // Only try if we have no repositories yet
         $deployed_repos = \get_option('github_deployer_deployed_repos', array());
-        
+
         if (empty($deployed_repos)) {
             // Get plugin instance
             $plugin = self::get_instance();
-            
-            // Get repository manager
+
+            // Repository manager is only available after plugins_loaded; skip during activation
             $repo_manager = $plugin->get_repository_manager();
-            
+            if (!$repo_manager) {
+                return;
+            }
+
             // Try to connect to the official repository
             $repo_manager->connect_to_specific_repository('https://github.com/Homeboy20/wordpress-gitdeploy');
         }
