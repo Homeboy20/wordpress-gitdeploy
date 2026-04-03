@@ -104,25 +104,28 @@ class Settings {
         $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'deploy';
         
         // Display settings form
-        require_once GITHUB_DEPLOYER_PLUGIN_DIR . 'templates/admin/header.php';
-        
+        $tpl_dir = GITHUB_DEPLOYER_PLUGIN_DIR . 'templates/admin/';
+
+        if ( file_exists( $tpl_dir . 'header.php' ) ) {
+            require_once $tpl_dir . 'header.php';
+        }
+
         // Display active tab content
-        switch ($active_tab) {
-            case 'repositories':
-                require_once GITHUB_DEPLOYER_PLUGIN_DIR . 'templates/admin/repositories.php';
-                break;
-            case 'settings':
-                require_once GITHUB_DEPLOYER_PLUGIN_DIR . 'templates/admin/settings-tab.php';
-                break;
-            case 'connect':
-                require_once GITHUB_DEPLOYER_PLUGIN_DIR . 'templates/admin/connect.php';
-                break;
-            default:
-                require_once GITHUB_DEPLOYER_PLUGIN_DIR . 'templates/admin/deploy.php';
-                break;
+        $tab_templates = array(
+            'repositories' => 'repositories.php',
+            'settings'     => 'settings-tab.php',
+            'connect'      => 'connect.php',
+            'deploy'       => 'deploy.php',
+        );
+        $tab_file = isset( $tab_templates[ $active_tab ] ) ? $tab_templates[ $active_tab ] : 'deploy.php';
+        if ( file_exists( $tpl_dir . $tab_file ) ) {
+            require_once $tpl_dir . $tab_file;
         }
         
-        require_once GITHUB_DEPLOYER_PLUGIN_DIR . 'templates/admin/footer.php';
+        $footer_template = GITHUB_DEPLOYER_PLUGIN_DIR . 'templates/admin/footer.php';
+        if ( file_exists( $footer_template ) ) {
+            require_once $footer_template;
+        }
     }
     
     public function enqueue_assets($hook) {
