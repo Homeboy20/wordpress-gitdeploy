@@ -5,7 +5,6 @@ class Settings {
     public function __construct() {
         // Make sure settings are registered early
         add_action('admin_init', array($this, 'settings_init'), 5);
-        add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_assets'));
     }
     
@@ -20,8 +19,21 @@ class Settings {
         );
     }
     
+    public function sanitize_settings($input) {
+        $output = array();
+        if (isset($input['token'])) {
+            $output['token'] = sanitize_text_field($input['token']);
+        }
+        if (isset($input['webhook_secret'])) {
+            $output['webhook_secret'] = sanitize_text_field($input['webhook_secret']);
+        }
+        return $output;
+    }
+
     public function settings_init() {
-        register_setting('github_deployer', 'github_deployer_settings');
+        register_setting('github_deployer', 'github_deployer_settings', array(
+            'sanitize_callback' => array($this, 'sanitize_settings'),
+        ));
         
         add_settings_section(
             'github_deployer_settings_section',
@@ -114,7 +126,7 @@ class Settings {
     }
     
     public function enqueue_assets($hook) {
-        if ($hook !== 'toplevel_page_github-deployer') {
+        if (strpos($hook, 'github-deployer') === false) {
             return;
         }
         

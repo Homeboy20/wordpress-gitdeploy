@@ -3,10 +3,6 @@
  * Template for the Repositories tab
  */
 
-// Add error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 try {
     // Get repository manager instance safely via the plugin singleton
     $plugin = GitHub_Deployer\Plugin::get_instance();

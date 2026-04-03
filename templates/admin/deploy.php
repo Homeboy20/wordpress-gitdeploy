@@ -15,7 +15,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$github_api = new GitHub_Deployer\GitHub_API(get_option('github_deployer_access_token', ''));
+$_gd_settings = get_option('github_deployer_settings', array());
+$github_api = new GitHub_Deployer\GitHub_API(isset($_gd_settings['token']) ? $_gd_settings['token'] : '');
+unset($_gd_settings);
 $auto_updater = new GitHub_Deployer\Auto_Updater(GitHub_Deployer\Plugin::get_instance());
 
 // Get auto-updating repositories

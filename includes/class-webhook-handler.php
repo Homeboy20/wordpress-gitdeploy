@@ -157,17 +157,17 @@ class Webhook_Handler {
         $repo_branch = isset($data['ref']) ? str_replace('refs/heads/', '', $data['ref']) : null;
         
         // Check if this repository is configured for auto-updates
-        $repo_manager = $this->plugin->get_repository_manager();
-        $repositories = $repo_manager->get_repositories();
-        
+        $repositories_db = new Repositories();
+        $repositories = $repositories_db->get_repositories();
+
         $matching_repo = null;
         foreach ($repositories as $repo) {
-            if ($repo['full_name'] === $repo_full_name && isset($repo['auto_update']) && $repo['auto_update']) {
+            if (($repo->owner . '/' . $repo->name) === $repo_full_name && isset($repo->auto_update) && $repo->auto_update) {
                 $matching_repo = $repo;
                 break;
             }
         }
-        
+
         if (!$matching_repo) {
             return new \WP_REST_Response(array(
                 'success' => false,
@@ -175,9 +175,9 @@ class Webhook_Handler {
                 'repo'    => $repo_full_name,
             ), 200);
         }
-        
+
         // Check if the pushed branch matches the configured branch
-        if (!empty($repo_branch) && !empty($matching_repo['branch']) && $repo_branch !== $matching_repo['branch']) {
+        if (!empty($repo_branch) && !empty($matching_repo->branch) && $repo_branch !== $matching_repo->branch) {
             return new \WP_REST_Response(array(
                 'success' => false,
                 'message' => 'Push to non-tracked branch',
@@ -188,8 +188,8 @@ class Webhook_Handler {
         
         // Trigger the deployment
         $deployer = $this->plugin->get_deployer();
-        $result = $deployer->deploy_repository($matching_repo['id']);
-        
+        $result = $deployer->deploy_repository($matching_repo->id);
+
         if (is_wp_error($result)) {
             return new \WP_REST_Response(array(
                 'success' => false,
@@ -197,7 +197,7 @@ class Webhook_Handler {
                 'repo'    => $repo_full_name,
             ), 500);
         }
-        
+
         return new \WP_REST_Response(array(
             'success' => true,
             'message' => 'Deployment triggered successfully',
@@ -233,17 +233,17 @@ class Webhook_Handler {
         $release_tag = $data['release']['tag_name'];
         
         // Check if this repository is configured for auto-updates
-        $repo_manager = $this->plugin->get_repository_manager();
-        $repositories = $repo_manager->get_repositories();
-        
+        $repositories_db = new Repositories();
+        $repositories = $repositories_db->get_repositories();
+
         $matching_repo = null;
         foreach ($repositories as $repo) {
-            if ($repo['full_name'] === $repo_full_name && isset($repo['auto_update']) && $repo['auto_update']) {
+            if (($repo->owner . '/' . $repo->name) === $repo_full_name && isset($repo->auto_update) && $repo->auto_update) {
                 $matching_repo = $repo;
                 break;
             }
         }
-        
+
         if (!$matching_repo) {
             return new \WP_REST_Response(array(
                 'success' => false,
@@ -251,11 +251,11 @@ class Webhook_Handler {
                 'repo'    => $repo_full_name,
             ), 200);
         }
-        
+
         // Trigger the deployment with the release tag
         $deployer = $this->plugin->get_deployer();
-        $matching_repo['tag'] = $release_tag; // Set the tag to deploy
-        $result = $deployer->deploy_repository($matching_repo['id']);
+        $matching_repo->tag = $release_tag; // Set the tag to deploy
+        $result = $deployer->deploy_repository($matching_repo->id);
         
         if (is_wp_error($result)) {
             return new \WP_REST_Response(array(

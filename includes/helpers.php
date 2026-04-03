@@ -54,8 +54,22 @@ function get_github_tags($owner, $repo) {
 }
 
 /**
+ * Get GitHub repository releases
+ *
+ * @param string $owner Repository owner/organization
+ * @param string $repo Repository name
+ * @return array|WP_Error Releases data or error
+ */
+function get_github_releases($owner, $repo) {
+    $settings = get_option('github_deployer_settings', array());
+    $token = isset($settings['token']) ? $settings['token'] : '';
+    $api = new GitHub_API($token);
+    return $api->get_releases($owner, $repo);
+}
+
+/**
  * Format error message
- * 
+ *
  * @param WP_Error $error WordPress error object
  * @return string Formatted error message
  */
